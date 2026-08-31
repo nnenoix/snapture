@@ -29,14 +29,19 @@ function download(filename, text, mime) {
 }
 
 // ---- OCR worker (lazy, reused) --------------------------------------------
+// Absolute engine URLs (resolved against this module's location) so the
+// Tesseract worker resolves core/lang correctly even under a project subpath
+// like /snapture/ — relative paths break inside the blob worker there.
+const ENGINE = new URL('./vendor/tesseract/', import.meta.url).href;
+
 let workerPromise = null;
 function getWorker() {
   if (!workerPromise) {
     // Self-hosted engine (same-origin) — no CDN, works offline & fully private.
     workerPromise = Tesseract.createWorker(['eng', 'rus'], 1, {
-      workerPath: './vendor/tesseract/worker.min.js',
-      corePath: './vendor/tesseract/tesseract-core.wasm.js',
-      langPath: './vendor/tesseract/tessdata/',
+      workerPath: ENGINE + 'worker.min.js',
+      corePath: ENGINE + 'tesseract-core.wasm.js',
+      langPath: ENGINE + 'tessdata/',
       logger: (m) => {
         if (m && typeof m.progress === 'number') setProgress(m.status, m.progress);
       },
