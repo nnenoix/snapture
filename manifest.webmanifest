@@ -1,0 +1,15 @@
+{
+  "name": "Snapture — snap it, done",
+  "short_name": "Snapture",
+  "description": "Photograph anything with text and get a calendar event, contact, or clean text. On-device, offline, no account.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0c0d12",
+  "theme_color": "#0c0d12",
+  "categories": ["productivity", "utilities"],
+  "icons": [
+    { "src": "./icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

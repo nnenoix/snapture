@@ -1,0 +1,10 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+*.log
+
+# Node (none used, but just in case)
+node_modules/
+
+# Local scratch
+*.tmp

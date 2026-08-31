@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Snapture — snap it, done</title>
+  <meta name="description" content="Point your camera at anything with text. Get it back as a calendar event, a contact, a copyable note — instantly, on your device, offline." />
+  <meta name="theme-color" content="#0c0d12" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="./icon.svg" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./" aria-label="Snapture home">
+      <img src="./icon.svg" alt="" width="28" height="28" />
+      <span>Snapture</span>
+    </a>
+    <span class="badge" title="Nothing is uploaded. Recognition runs in your browser.">
+      <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="M12 1 3 5v6c0 5 3.8 9.7 9 11 5.2-1.3 9-6 9-11V5l-9-4Zm0 10.9h7c-.5 3.9-3.1 7.4-7 8.5V12H5V6.3l7-3.1v8.7Z"/></svg>
+      On-device
+    </span>
+  </header>
+
+  <main class="app">
+    <!-- 1. Capture -->
+    <section id="capture" class="stage stage--capture">
+      <div class="hero">
+        <h1 class="hero__title">Snap it. <span>Done.</span></h1>
+        <p class="hero__sub">Photograph anything with text — a poster, a receipt, a business card, a menu. Get back a calendar event, a contact, or clean text. Instantly, on your device.</p>
+      </div>
+
+      <div class="capture-actions">
+        <label class="btn btn--primary btn--scan">
+          <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path fill="currentColor" d="M9 3 7.2 5H4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-3.2L15 3H9Zm3 5.5A4.5 4.5 0 1 1 7.5 13 4.5 4.5 0 0 1 12 8.5Z"/></svg>
+          Scan with camera
+          <input id="cameraInput" type="file" accept="image/*" capture="environment" hidden />
+        </label>
+        <label class="btn btn--ghost">
+          Choose a photo
+          <input id="fileInput" type="file" accept="image/*" hidden />
+        </label>
+      </div>
+
+      <ul class="examples" aria-label="What you can scan">
+        <li><b>Poster</b><span>→ calendar event</span></li>
+        <li><b>Business card</b><span>→ saved contact</span></li>
+        <li><b>Receipt</b><span>→ total, copied</span></li>
+        <li><b>Any text</b><span>→ copy · share · .txt</span></li>
+      </ul>
+    </section>
+
+    <!-- 2. Processing -->
+    <section id="processing" class="stage" hidden>
+      <div class="proc">
+        <img id="preview" class="proc__thumb" alt="Scanned image preview" />
+        <div class="proc__body">
+          <p id="procStatus" class="proc__status">Reading the image…</p>
+          <div class="bar"><div id="procBar" class="bar__fill"></div></div>
+          <p class="proc__hint">First scan downloads the recognizer once, then works offline.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. Result -->
+    <section id="result" class="stage" hidden>
+      <div id="smartCard" class="smart"></div>
+
+      <div class="text-block">
+        <div class="text-block__head">
+          <h2>Recognized text</h2>
+          <span id="typeTag" class="tag"></span>
+        </div>
+        <textarea id="textOut" spellcheck="false" aria-label="Recognized text, editable"></textarea>
+        <p class="text-block__hint">OCR isn't perfect — fix anything here and the action above updates.</p>
+      </div>
+
+      <div class="row-actions">
+        <button class="btn btn--soft" id="copyBtn">Copy</button>
+        <button class="btn btn--soft" id="shareBtn">Share</button>
+        <button class="btn btn--soft" id="txtBtn">Download .txt</button>
+        <button class="btn btn--primary" id="againBtn">Scan another</button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <p>Runs entirely in your browser. No account, no upload, no tracking.</p>
+    <p class="foot__pro">Pro (batch, history, PDF export) — <a id="proLink" href="#pro">coming soon</a></p>
+  </footer>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="./vendor/tesseract/tesseract.min.js"></script>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

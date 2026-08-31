@@ -1,0 +1,11 @@
+{
+  "name": "snapture",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Snap it, done. Photo -> text -> action. 100% on-device PWA.",
+  "scripts": {
+    "test": "node --test",
+    "serve": "node server.mjs"
+  }
+}
