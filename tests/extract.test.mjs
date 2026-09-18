@@ -145,3 +145,69 @@ test('buildVCard: multiple phones and emails', () => {
 test('guessTitle takes first non-empty line, trimmed', () => {
   assert.equal(guessTitle('\n\n  Jazz Night  \n31 Aug'), 'Jazz Night');
 });
+
+// ---- added coverage: OCR-real edge cases -----------------------------------
+
+test('monthNum handles RU 3-letter abbreviations', () => {
+  assert.equal(monthNum('авг'), 8);
+  assert.equal(monthNum('сент'), 9);
+  assert.equal(monthNum('дек.'), 12);
+  assert.equal(monthNum('янв'), 1);
+});
+
+test('parseDateTime: RU abbreviated month "5 авг" fills current year', () => {
+  const r = parseDateTime('Показ 5 авг в 20:00', NOW);
+  assert.deepEqual(r, { y: 2026, m: 8, d: 5, hh: 20, mm: 0, hasTime: true });
+});
+
+test('parseDateTime: RU abbreviated month with trailing dot "31 сент."', () => {
+  const r = parseDateTime('Ярмарка 31 сент.', NOW);
+  assert.equal(r.m, 9);
+  assert.equal(r.d, 31);
+});
+
+test('parseDateTime: year-first with dots (2026.08.31)', () => {
+  assert.deepEqual(parseDateTime('дата 2026.08.31', NOW), { y: 2026, m: 8, d: 31, hh: 0, mm: 0, hasTime: false });
+});
+
+test('parseDateTime: year-first with slashes (2026/12/01 09:05)', () => {
+  const r = parseDateTime('2026/12/01 09:05', NOW);
+  assert.deepEqual(r, { y: 2026, m: 12, d: 1, hh: 9, mm: 5, hasTime: true });
+});
+
+test('parseDateTime: day-first dd.mm.yyyy still wins over year-first pattern', () => {
+  const r = parseDateTime('31.08.2026', NOW);
+  assert.deepEqual(r, { y: 2026, m: 8, d: 31, hh: 0, mm: 0, hasTime: false });
+});
+
+test('findUrls: protocol-less www is captured and trailing punctuation stripped', () => {
+  assert.deepEqual(findUrls('see www.acme.co/tickets. today'), ['www.acme.co/tickets']);
+});
+
+test('findAmounts: Russian "руб" total', () => {
+  const a = findAmounts('Итого 512,00 руб');
+  assert.ok(a.some((x) => /512,00\s?руб/.test(x)));
+});
+
+test('classify: Russian receipt via "итого" without currency sign', () => {
+  const r = classify('МАГАЗИН\n01.12.2026\nХлеб 40\nМолоко 80\nИтого 120', NOW);
+  assert.equal(r.type, 'receipt');
+  assert.ok(r.amounts.length >= 1);
+});
+
+test('buildICS: escapes newlines in description', () => {
+  const start = { y: 2026, m: 1, d: 1, hh: 0, mm: 0, hasTime: false };
+  const ics = buildICS({ title: 'X', start, description: 'line1\nline2' }, NOW);
+  assert.match(ics, /DESCRIPTION:line1\\nline2/);
+});
+
+test('buildVCard: includes URL line when provided', () => {
+  const vcf = buildVCard({ name: 'A', url: 'https://acme.co' });
+  assert.match(vcf, /URL:https:\/\/acme\.co/);
+});
+
+test('buildVCard: safe defaults with no fields', () => {
+  const vcf = buildVCard({});
+  assert.match(vcf, /FN:Contact/);
+  assert.match(vcf, /END:VCARD$/);
+});

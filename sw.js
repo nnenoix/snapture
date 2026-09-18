@@ -1,6 +1,7 @@
-// Snapture service worker — app shell precache + runtime cache for the
-// Tesseract CDN, so the app works offline after the first successful scan.
-const VERSION = 'snapture-v1';
+// Snapture service worker — precache the app shell, and runtime-cache the
+// self-hosted OCR engine + language data on first use, so scanning keeps working
+// offline afterwards. Everything Snapture loads is same-origin (no CDN).
+const VERSION = 'snapture-v2';
 const SHELL = [
   './',
   './index.html',
@@ -24,21 +25,18 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET') return;
+  // Only handle same-origin GETs (shell + vendored Tesseract core/worker/langs).
+  if (new URL(req.url).origin !== self.location.origin) return;
 
-  const isTesseract = /cdn\.jsdelivr\.net|unpkg\.com|tessdata|tesseract/i.test(req.url);
-  const sameOrigin = new URL(req.url).origin === self.location.origin;
-
-  if (sameOrigin || isTesseract) {
-    // Cache-first: fast, and enables offline once these are cached.
-    e.respondWith(
-      caches.match(req).then((hit) => {
-        if (hit) return hit;
-        return fetch(req).then((res) => {
-          const copy = res.clone();
-          caches.open(VERSION).then((c) => c.put(req, copy)).catch(() => {});
-          return res;
-        }).catch(() => hit);
-      })
-    );
-  }
+  // Cache-first: fast repeat loads, and offline once these are cached.
+  e.respondWith(
+    caches.match(req).then((hit) => {
+      if (hit) return hit;
+      return fetch(req).then((res) => {
+        const copy = res.clone();
+        caches.open(VERSION).then((c) => c.put(req, copy)).catch(() => {});
+        return res;
+      }).catch(() => hit);
+    })
+  );
 });

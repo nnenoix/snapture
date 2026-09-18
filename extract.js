@@ -11,6 +11,9 @@ const MONTHS = {
   апреля: 4, май: 5, мая: 5, июнь: 6, июня: 6, июль: 7, июля: 7, август: 8,
   августа: 8, сентябрь: 9, сентября: 9, октябрь: 10, октября: 10, ноябрь: 11,
   ноября: 11, декабрь: 12, декабря: 12,
+  // Russian 3-letter abbreviations (posters/flyers: "31 авг", "5 сент.")
+  янв: 1, фев: 2, мар: 3, апр: 4, июн: 6, июл: 7, авг: 8, сен: 9, сент: 9,
+  окт: 10, ноя: 11, дек: 12,
 };
 
 const unique = (arr) => [...new Set(arr)];
@@ -104,6 +107,11 @@ export function parseDateTime(text, now = new Date()) {
     y = +m[1];
     mo = +m[2];
     d = +m[3];
+  } else if ((m = text.match(/\b(\d{4})[.\/](\d{1,2})[.\/](\d{1,2})\b/))) {
+    // ISO-ish with dots/slashes: 2026.08.31 or 2026/08/31 (year-first, unambiguous)
+    y = +m[1];
+    mo = +m[2];
+    d = +m[3];
   } else if ((m = text.match(/\b(\d{1,2})[.\/](\d{1,2})[.\/](\d{2,4})\b/))) {
     const a = +m[1];
     const b = +m[2];
@@ -144,7 +152,12 @@ export function parseDateTime(text, now = new Date()) {
 
 // ---- classification --------------------------------------------------------
 
-const RECEIPT_WORDS = /\b(total|subtotal|amount due|receipt|invoice|vat|tax|итого|сумма|чек|ндс|к\s*оплате|кол-?во)\b/i;
+// Unicode-aware token boundaries: JS `\b` is defined by ASCII `\w`, so it never
+// forms a boundary around Cyrillic — `\bитого\b` silently fails to match, which
+// used to break Russian receipt detection entirely. We consume a leading
+// non-letter/digit (avoids lookbehind, which older iOS Safari lacks) and use a
+// Unicode lookahead so "tax" doesn't fire inside "taxi" and "итого" is found.
+const RECEIPT_WORDS = /(?:^|[^\p{L}\p{N}])(?:total|subtotal|amount due|receipt|invoice|vat|tax|итого|сумма|чек|ндс|к\s*оплате|кол-?во)(?![\p{L}\p{N}])/iu;
 
 /**
  * Decide what a scanned blob of text most likely is, and pull structured bits.

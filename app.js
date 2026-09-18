@@ -67,6 +67,13 @@ function setProgress(status, progress) {
 // ---- flow ------------------------------------------------------------------
 async function handleImage(file) {
   if (!file) return;
+  // The recognizer library is a plain <script>; if it failed to load (e.g. a
+  // first visit while offline, or a blocked request) `Tesseract` is undefined.
+  // Say so clearly instead of a generic "couldn't read that image".
+  if (typeof Tesseract === 'undefined') {
+    toast('Recognizer didn’t load. Check your connection and reload the page.');
+    return;
+  }
   show('processing');
   $('procBar').style.width = '0%';
   $('procStatus').textContent = 'Reading the image…';
@@ -76,12 +83,16 @@ async function handleImage(file) {
   try {
     const worker = await getWorker();
     const { data } = await worker.recognize(file);
-    URL.revokeObjectURL(objectUrl);
     renderResult((data.text || '').trim());
   } catch (err) {
     console.error(err);
+    // A failed load leaves the worker promise rejected; drop it so the next
+    // scan retries from scratch instead of reusing the broken worker.
+    workerPromise = null;
     toast('Could not read that image. Try a clearer, well-lit photo.');
     show('capture');
+  } finally {
+    URL.revokeObjectURL(objectUrl); // never leak the preview blob URL
   }
 }
 
